@@ -6,27 +6,11 @@ const User = require("../models/userModel");
 
 router.post("/register", async (req, res) => {
   try {
-    let {
-      name,
-      lastname,
-      dni,
-      address,
-      email,
-      password,
-      passwordCheck,
-    } = req.body;
+    let { email, password, passwordCheck, displayName } = req.body;
 
     // validate
 
-    if (
-      !name ||
-      !lastname ||
-      !dni ||
-      !address ||
-      !email ||
-      !password ||
-      !passwordCheck
-    )
+    if (!email || !password || !passwordCheck)
       return res.status(400).json({ msg: "Not all fields have been entered." });
     if (password.length < 5)
       return res
@@ -43,16 +27,15 @@ router.post("/register", async (req, res) => {
         .status(400)
         .json({ msg: "An account with this email already exists." });
 
+    if (!displayName) displayName = email;
+
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      name,
-      lastname,
-      dni,
-      address,
       email,
       password: passwordHash,
+      displayName,
     });
     const savedUser = await newUser.save();
     res.json(savedUser);
@@ -83,7 +66,7 @@ router.post("/login", async (req, res) => {
       token,
       user: {
         id: user._id,
-        email: user.email,
+        displayName: user.displayName,
       },
     });
   } catch (err) {
